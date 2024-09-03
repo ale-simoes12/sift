@@ -31,6 +31,7 @@ for file in image_files:
     # Detectar keypoints e calcular descritores
     kp, des = sift.detectAndCompute(gray, None)
     
+    
     # Ordenar keypoints com base na resposta e selecionar os melhores
     #keypoints = sorted(kp, key=lambda x: x.response, reverse=True)
     #num_best_keypoints = 4000
@@ -42,19 +43,20 @@ for file in image_files:
     novo_path = output_file.replace("imgs", "imgswd")
     cv.imwrite(novo_path, img_with_keypoints)
     lista.append(novo_path)
+    vector[kp]  = des
     imgs_des[novo_path] = des
     imgs_kp[novo_path] = kp
 
-print(imgs_des[lista[0]])
-print("==============================================================")
-print(imgs_des[lista[1]])
-print("==============================================================")
-print(imgs_kp[lista[0]])
-print("==============================================================")
-print(imgs_kp[lista[1]])
-print("==============================================================")
-print(lista_images[0])
-print(lista_images[1])
+# print(imgs_des[lista[0]])
+# print("==============================================================")
+# print(imgs_des[lista[1]])
+# print("==============================================================")
+# print(imgs_kp[lista[0]])
+# print("==============================================================")
+# print(imgs_kp[lista[1]])
+# print("==============================================================")
+# print(lista_images[0])
+# print(lista_images[1])
 # bf = cv.BFMatcher()
 # matches = bf.knnMatch(imgs_des[lista[0]],imgs_des[lista[1]],k=2)
 # # Apply ratio test
@@ -94,7 +96,7 @@ matches = bf.match(imgs_des[lista[0]], imgs_des[lista[1]])
 matches = sorted(matches, key=lambda x: x.distance)
 
 
-print("metches" , matches)
+#print("metches" , matches)
 
 # Controle o número de correspondências a serem desenhadas
 numero_de_matches = 100  # Altere este valor para controlar quantas correspondências deseja exibir
@@ -150,25 +152,52 @@ for match in matches_filtrados:
     pt2 = (int(imgs_kp[lista[1]][match.trainIdx].pt[0] + lista_images[0].shape[1]), int(imgs_kp[lista[1]][match.trainIdx].pt[1]))
     cv.line(imagem_matches, pt1, pt2, (0, 0, 255), 5)  # Cor verde e espessura 3
 
-print(matches_filtrados)
+#print(matches_filtrados)
 
-  # Mostra quais pontos correspondem entre si
-for i, match in enumerate(matches[:100]):  # Ajuste o número conforme necessário
-    pt1 = imgs_kp[lista[0]][match.queryIdx].pt
-    pt2 = imgs_kp[lista[1]][match.trainIdx].pt
-    print(f'Match {i+1}: Imagem 1 ponto {pt1} -> Imagem 2 ponto {pt2}')
+# Lista para armazenar os keypoints e descritores correspondentes
+kp_matches_img1 = []
+des_matches_img1 = []
+kp_matches_img2 = []
+des_matches_img2 = []
 
-for i, match in enumerate(matches[:10]):  # Ajuste o número conforme necessário
-    pt1 = imgs_kp[lista[0]][match.queryIdx].pt
-    pt2 = imgs_kp[lista[1]][match.trainIdx].pt
-    des1 = imgs_des[lista[0]][match.queryIdx]
+# Iterar sobre os matches filtrados
+cont = 0
+matriz = [[0 for _ in range(4)] for _ in range(100)]
+for match in matches_filtrados:
     
+    print(cont)
+    idx_img1 = match.queryIdx
+    idx_img2 = match.trainIdx
+    kp_img1 = imgs_kp[lista[0]][idx_img1]
+    des_img1 = imgs_des[lista[0]][idx_img1]
+    kp_img2 = imgs_kp[lista[1]][idx_img2]
+    des_img2 = imgs_des[lista[1]][idx_img2]
+    
+    kp_matches_img1.append(kp_img1)
+    des_matches_img1.append(des_img1)
+    kp_matches_img2.append(kp_img2)
+    des_matches_img2.append(des_img2)
+    matriz[cont][0] = kp_img1
+    matriz[cont][1] = des_img1
+    matriz[cont][2] = kp_img2
+    matriz[cont][3] = des_img2
+    cont+=1
 
-    des2 = imgs_des[lista[1]][match.trainIdx]
-    print(f'Match {i+1}:')
-    print(f'  Imagem 1 ponto: {pt1}, descritor: {des1}')
-    print(f'  Imagem 2 ponto: {pt2}, descritor: {des2}')    
+for i in range(cont):
+    for j in range(4):
+        print(matriz[i][j])
+    print()
 
+# Nome do arquivo de saída
+output_file = 'resultado.txt'
+
+# Abre o arquivo para escrita
+with open(output_file, 'w') as f:
+    for i in range(cont):  # Só itera até o número de correspondências processadas
+        for j in range(4):
+            f.write(str(matriz[i][j]) )  # Espaço entre os valores
+            f.write('\n')
+        f.write('\n')  # Nova linha após cada linha da matriz
 #Exibe a imagem com as correspondências
 plt.figure(figsize=(15, 10))
 plt.imshow(cv.cvtColor(imagem_matches, cv.COLOR_BGR2RGB))
@@ -176,7 +205,7 @@ plt.title(f'Correspondências entre as duas perspectivas usando SIFT ({len(match
 plt.axis('off')
 plt.show()
 
-
+# Iteramos sobre o dicionário para encontrar a chave correspondente ao valor
 
 
 
